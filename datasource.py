@@ -5,7 +5,7 @@ from datetime import datetime
 import pandas as pd
 
 class ElasticDS():
-    def __init__(self, index='test'):
+    def __init__(self, index='bokeshif'):
         self.cache = SimpleCache()
         self.es = ElasticSearch('http://localhost:9200')
         self.index = index

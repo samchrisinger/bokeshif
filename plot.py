@@ -22,7 +22,7 @@ docname = str(uuid.uuid4())
 session.use_doc(docname)
 session.load_document(document)
 
-ds = EDS()
+ds = EDS(index='bokeshif')
 data = ds.get_data()['hist']
 cols = ds.cols
 source = ColumnDataSource(
