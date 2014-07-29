@@ -10,4 +10,5 @@ lasticsearch), and make sure it is running
 5. Install bokeh
   1. ``` git clone git@github.com:ContinuumIO/bokeh.git	&& cd bokeh```
   2. ``` [PATH_TO_YOUR_VIRTUAL_ENV]/bin/python setup.py	install	--build_js ```
-6. 
+6. From within the bokeh directory, run the bokeh server: ``` ./bokeh-server ```
+7. From within this directory (and with your virtualenv sourced), run ``` python plot.py ```
