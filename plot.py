@@ -12,7 +12,6 @@ from bokeh.session import Session
 from bokeh.widgetobjects import *
 from bokeh.objects import  DataRange1d, ColumnDataSource, Plot, LinearAxis, Glyph, Grid, DatetimeAxis
 from bokeh.glyphs import Quad
-from bokeh.properties import String
 
 from datasource import ElasticDS as EDS
 
@@ -36,7 +35,6 @@ def update_data():
     data = ds.get_data(query)
     schema = ds.get_schema()
     counter.text = 'Showing {0} out of {1} documents'.format(data['hits'], schema['__global']['size'])
-    #session.store_objects(counter)
     source.data = data['hist']
     session.store_document(document)    
 
@@ -71,7 +69,7 @@ def _row(i):
                 x_range=xdr, 
                 y_range=ydr, 
                 title=None,
-                plot_width=800,
+                plot_width=700,
                 plot_height=100,
                 min_border=0)
 
@@ -96,7 +94,9 @@ def _row(i):
                  axis=xaxis)
     yaxis = LinearAxis(plot=plot, 
                        location='left',
-                       dimension=1)
+                       dimension=1,
+                       axis_label='count')
+
     ygrid = Grid(plot=plot,
                  dimension=1,
                  axis=yaxis)

@@ -15,8 +15,8 @@ class ElasticDS():
             return self.cache.get('schema')        
         global es
         schema = {}
-        res = rget('http://localhost:9200/test/_mapping').json()
-        schema = res['test']['mappings']['sample']['properties']
+        res = rget('http://localhost:9200/{0}/_mapping'.format(self.index)).json()
+        schema = res[self.index]['mappings']['seed']['properties']
         subset = {k:v for k,v in schema.iteritems() if v['type'] == 'date'}
         datekeys = subset.keys()
         maxes = []
@@ -45,7 +45,7 @@ class ElasticDS():
             "aggs": aggs,
             "size": 0
         }
-        res = self.es.search(query, index='test')
+        res = self.es.search(query, index=self.index)
         aggs = res['aggregations']
         for key in datekeys:
             maxes.append(aggs['max_'+key]['value'])
@@ -137,7 +137,7 @@ class ElasticDS():
         if len(aggs) > 0:
             qs["aggregations"] = aggs
 
-        res = self.es.search(qs, index='test')
+        res = self.es.search(qs, index=self.index)
         hits = [h['_source'] for h in res['hits']['hits']]
         hit_count = res['hits']['total']
         aggs = res.get('aggregations') or []

@@ -3,6 +3,7 @@ import subprocess
 import json
 from random import randrange
 from datetime import timedelta, datetime
+from requests import delete as rdelete
 
 def pad(i, l):
     return (('0'*l)+str(i))[-l:]
@@ -73,6 +74,7 @@ def Document():
     return doc
 
 def seed(size):
+    rdelete("http://localhost:9200/bokeshif")
     for i in range(size):
         doc = json.dumps(Document())
         cmd = "curl -XPOST 'http://localhost:9200/bokeshif/seed/' -d '{0}'".format(doc) 
