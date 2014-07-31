@@ -4,13 +4,14 @@ from datetime import datetime
 fts = datetime.fromtimestamp
 from webbrowser import open_new_tab
 from random import randint
+from collections import OrderedDict
 
 from requests.exceptions import ConnectionError
 
 from bokeh.document import Document
 from bokeh.session import Session
 from bokeh.widgetobjects import *
-from bokeh.objects import  DataRange1d, ColumnDataSource, Plot, LinearAxis, Glyph, Grid, DatetimeAxis
+from bokeh.objects import  DataRange1d, ColumnDataSource, Plot, LinearAxis, Glyph, Grid, DatetimeAxis, HoverTool
 from bokeh.glyphs import Quad
 
 document = Document()
@@ -57,9 +58,8 @@ def _plot():
                           ydata_range=ydr, 
                           glyph=quad)
     plot.renderers.append(quad_renderer)
-
     
-    xaxis = LinearAxis(plot=plot, 
+    xaxis = DatetimeAxis(plot=plot, 
                        location='bottom',
                        dimension=0)
     xgrid = Grid(plot=plot,
@@ -71,6 +71,12 @@ def _plot():
     ygrid = Grid(plot=plot,
                  dimension=1,
                  axis=yaxis)    
+    hover = HoverTool(plot=plot, 
+                      tooltips=OrderedDict([
+                          ("l", "@l")
+                      ]),
+                      always_active=True)    
+    plot.tools.append(hover)
     return plot
 
 def layout():    

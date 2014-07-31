@@ -86,9 +86,9 @@ class ElasticDS():
                     }
                     for v in vals:
                         bounds[v] = value[v]
-                    range = {}
-                    range[key] = bounds
-                    queries.append({"range": range})
+                    timerange = {}
+                    timerange[key] = bounds
+                    queries.append({"range": timerange})
                     aggs[key+'_hist'] = {
                         "date_histogram": {
                             "field": key,
@@ -140,6 +140,7 @@ class ElasticDS():
         if len(aggs) > 0:
             qs["aggregations"] = aggs
 
+        print dumps(qs)
         res = self.es.search(qs, index=self.index)
         hits = [h['_source'] for h in res['hits']['hits']]
         hit_count = res['hits']['total']
@@ -152,18 +153,30 @@ class ElasticDS():
             key = agg.split('_hist')[0]
             for bin in bucket:        
                 if not hist.get(bin['key']):
-                    hist[bin['key']] = {k:0 for k in timekeys+['bottom', 'left', 'right']}            
+                    hist[bin['key']] = {k:0 for k in timekeys+['bottom', 'left', 'right', 'max']}            
                 hist[bin['key']][key] = bin['doc_count']
-                hist[bin['key']]['left'] = (bin['key'])-(interval)
-                hist[bin['key']]['right'] = (bin['key'])+(interval)
+                hist[bin['key']]['left'] = (bin['key'])-(interval/2)
+                hist[bin['key']]['right'] = (bin['key'])+(interval/2)
         cells = {k:[] for k in ['bottom', 'left', 'right']+timekeys}
         cols = cells.keys()
         cells['date'] = []
         for date in sorted(hist.keys()):
-            cells['date'].append(date)
+            cells['date'].append(date)            
             for col in cols:
                 cells[col].append(hist[date][col])            
-                        
+                
+        gmax_height = 0
+        for col in timekeys:
+            gmax_height = max([gmax_height]+cells[col])
+        
+        cells['max'] = [gmax_height*1.25]*len(cells['date'])    
+        for col in timekeys:
+            max_height = float(max(cells[col]))
+            density = '{0}_density'.format(col)
+            cells[density] = []
+            for i in range(len(cells['date'])):
+                cells[density].append(((cells[col][i]/max_height)*0.2))
+            
         if len(hits) > 0:
             keys = hits[0].keys()            
             data = {k:[] for k in keys+['show']}
@@ -173,6 +186,7 @@ class ElasticDS():
                     data[key].append(value)
         else:
             data = {}
+
         return {
             'hits': hit_count,
             'hist': cells,
