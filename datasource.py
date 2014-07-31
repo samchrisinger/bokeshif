@@ -1,19 +1,18 @@
 from pyelasticsearch import ElasticSearch
 from requests import get as rget
-from werkzeug.contrib.cache import SimpleCache
 from datetime import datetime
-import pandas as pd
+from pandas import DataFrame
 from json import dumps
 
 class ElasticDS():
     def __init__(self, index='bokeshif'):
-        self.cache = SimpleCache()
+        self._cache = {}
         self.es = ElasticSearch('http://localhost:9200')
         self.index = index
 
     def get_schema(self):
-        if self.cache.get('schema'):
-            return self.cache.get('schema')        
+        if self._cache.get('schema'):
+            return self._cache['schema']
         global es
         schema = {}
         res = rget('http://localhost:9200/{0}/_mapping'.format(self.index)).json()
@@ -62,10 +61,12 @@ class ElasticDS():
         res = rget('http://localhost:9200/{0}/_count'.format(self.index))
         schema['__global']['size'] = res.json().get('count') or 0
 
-        self.cache.set('schema', schema)
+        self._cache['schema'] = schema
         return schema
 
     def get_data(self, args={}):
+        if len(args) == 0 and self._cache.get('data'):
+            return self._cache['data']
         schema = self.get_schema()
         gtimes = schema['__global']['times']
         queries = []
@@ -140,7 +141,7 @@ class ElasticDS():
         if len(aggs) > 0:
             qs["aggregations"] = aggs
 
-        print dumps(qs)
+        print dumps(qs)+'\n'
         res = self.es.search(qs, index=self.index)
         hits = [h['_source'] for h in res['hits']['hits']]
         hit_count = res['hits']['total']
@@ -175,7 +176,7 @@ class ElasticDS():
             density = '{0}_density'.format(col)
             cells[density] = []
             for i in range(len(cells['date'])):
-                cells[density].append(((cells[col][i]/max_height)*0.2))
+                cells[density].append(((cells[col][i]/max_height)*0.1))
             
         if len(hits) > 0:
             keys = hits[0].keys()            
@@ -187,15 +188,19 @@ class ElasticDS():
         else:
             data = {}
 
-        return {
+
+        ret = {
             'hits': hit_count,
             'hist': cells,
             'data': data,
         }
+        if len(args) == 0:
+            self._cache['data'] = ret
+        return ret
 
     def get_data_frame(self):
         res = self.get_data()
-        hist = pd.DataFrame.from_dict(res['hist'])
+        hist = DataFrame.from_dict(res['hist'])
         return hist
         
     @property
