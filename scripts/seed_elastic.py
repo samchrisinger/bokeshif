@@ -18,22 +18,12 @@ def random_date(start, end):
     random_second = randrange(int_delta)
     return start + timedelta(seconds=random_second)
 
-def Date(d):
-    return {
-        'type': 'date',
-        'value': d.strftime('%Y-%m-%d')
-        }
-
-def String(s):
-    return {
-        'type': 'string',
-        'value': s
-    }
-
-
 word_file = "/usr/share/dict/words"
 words = open(word_file).read().splitlines()
 num_words = len(words)
+
+def text():
+    return ' '.join(words[randint(0, num_words)] for i in range(randint(10, 50))]
 
 categories = {}
 for i in range(6):
@@ -71,6 +61,7 @@ def Document():
     for time in times:
         t = random_date(times[time]['min'], times[time]['max']) 
         doc[time] = t.strftime('%Y-%m-%d')
+    doc['description'] = text()
     return doc
 
 def seed(size):
