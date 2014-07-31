@@ -3,6 +3,7 @@ from requests import get as rget
 from werkzeug.contrib.cache import SimpleCache
 from datetime import datetime
 import pandas as pd
+from json import dumps
 
 class ElasticDS():
     def __init__(self, index='bokeshif'):
@@ -69,6 +70,10 @@ class ElasticDS():
         gtimes = schema['__global']['times']
         queries = []
         aggs = {}
+        gmin = datetime.fromtimestamp(gtimes['min'])
+        gmax = datetime.fromtimestamp(gtimes['max'])
+        gwindow = (gmax-gmin).days
+        interval = max(gwindow/1000,1)
         for key, value in args.iteritems():            
             if isinstance(value, dict):
                 vals = value.keys()                
@@ -84,10 +89,6 @@ class ElasticDS():
                     range = {}
                     range[key] = bounds
                     queries.append({"range": range})
-                    window = (datetime.strptime(bounds['to'], '%Y-%m-%d')-datetime.strptime(bounds['from'], '%Y-%m-%d')).days
-                    gwindow = (gmax-gmin).days
-                    rat = (window/gwindow)*gwindow
-                    interval = max(rat/1000,1)
                     aggs[key+'_hist'] = {
                         "date_histogram": {
                             "field": key,
@@ -112,25 +113,27 @@ class ElasticDS():
                 queries.append({"or": ors})
         diff = set([k for k in schema.keys() if not k == '__global' and schema[k]['type'] == 'date']) - set(args.keys())
         for key in diff:
-            gmin = datetime.fromtimestamp(gtimes['min'])
-            gmax = datetime.fromtimestamp(gtimes['max'])
-            gwindow = (gmax-gmin).days
-            interval = max(gwindow/1000,1)
             aggs[key+'_hist'] = {
                 "date_histogram": {
                     "field": key,
                     "interval": "{0}d".format(interval)
                 }
             }        
+        filter = {}
+        if len(queries) == 0:
+            filter = {"match_all": {}}
+        elif len(queries) == 1:
+            filter = queries[0]
+        else:
+            filter = {"and": queries}
+
         qs = {
             "query": {
                 "filtered": {
                     "query": {
                         "match_all": {}
                     },
-                    "filter": ({
-                        "and": queries
-                    }) if len(queries) > 0 else {"match_all": {}},
+                    "filter": filter
                 }
             }
         }
@@ -151,20 +154,29 @@ class ElasticDS():
                 if not hist.get(bin['key']):
                     hist[bin['key']] = {k:0 for k in timekeys+['bottom', 'left', 'right']}            
                 hist[bin['key']][key] = bin['doc_count']
-                hist[bin['key']]['left'] = (bin['key'])-(interval/2)
-                hist[bin['key']]['right'] = (bin['key'])+(interval/2)
+                hist[bin['key']]['left'] = (bin['key'])-(interval)
+                hist[bin['key']]['right'] = (bin['key'])+(interval)
         cells = {k:[] for k in ['bottom', 'left', 'right']+timekeys}
         cols = cells.keys()
         cells['date'] = []
-        for date in hist:
+        for date in sorted(hist.keys()):
             cells['date'].append(date)
             for col in cols:
                 cells[col].append(hist[date][col])            
-
+                        
+        if len(hits) > 0:
+            keys = hits[0].keys()            
+            data = {k:[] for k in keys+['show']}
+            for doc in hits:
+                doc['show'] = dumps(doc)
+                for key,value in doc.iteritems():
+                    data[key].append(value)
+        else:
+            data = {}
         return {
             'hits': hit_count,
             'hist': cells,
-            'data': hits,
+            'data': data,
         }
 
     def get_data_frame(self):
@@ -179,6 +191,16 @@ class ElasticDS():
         return [gtime['min'], gtime['max']]
 
     @property
-    def cols(self):
+    def date_columns(self):
         schema = self.get_schema()
         return [k for k in schema.keys() if not k == '__global' and schema[k]['type'] == 'date']
+    
+    @property
+    def string_columns(self):
+        schema = self.get_schema()
+        return [k for k in schema.keys() if not k == '__global' and schema[k]['type'] == 'string']
+
+    @property
+    def columns(self):
+        schema = self.get_schema()
+        return [k for k in schema.keys() if not k == '__global']

@@ -64,7 +64,7 @@ for i in range(4):
     times[name] = {'min': d1, 'max': d2}
     
 def Document():
-    doc = {'map': {}}
+    doc = {}
     for cat in categories:
         choice = categories[cat][randint(0, len(categories[cat])-1)]
         doc[cat] = choice
