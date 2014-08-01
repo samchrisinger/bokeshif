@@ -2,7 +2,6 @@ from time import sleep
 from flask import render_template
 import threading
 import signal
-import sys
 
 from flask import Flask
 app = Flask(__name__)

@@ -1,0 +1,10 @@
+{
+    "title": "string",
+    "start": "date",
+    "end": "date",
+    "updated": "date",
+    "description": "text",
+    "category": "string",
+    "owner": "string",
+    "size": "number"
+}

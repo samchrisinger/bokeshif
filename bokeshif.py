@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 from bokeh.document import Document
 from bokeh.session import Session
-from bokeh.widgetobjects import VBox, HBox, PreText, MultiSelect, DateRangeSlider
+from bokeh.widgetobjects import VBox, HBox, PreText, MultiSelect, DateRangeSlider, TextInput
 from bokeh.objects import  DataRange1d, ColumnDataSource, Plot, LinearAxis, Glyph, Grid, DatetimeAxis, HoverTool, DatetimeTickFormatter
 from bokeh.glyphs import Quad, Circle
 from bokeh.embed import autoload_server
@@ -105,13 +105,11 @@ class Bokeshif:
 
     def _controls(self):
         def select_change(obj, attr, old, new):
-            q = new
-            self.query[obj._owner] = q
+            self.query[obj._owner] = new
             self._update_data()
     
         schema = self.ds.get_schema()
         subset = {k:v for k,v in schema.iteritems() if not k == '__global' and v['type'] == 'string'}
-
         selects = []
         for k,v in subset.iteritems():
             ms = MultiSelect.create(
@@ -121,7 +119,24 @@ class Bokeshif:
             ms._owner = k
             ms.on_change('value', select_change)
             selects.append(ms)
-        return VBox(children=selects)
+
+        def search_change(obj, attr, old, new):
+            self.query[obj._owner] = new
+            self._update_data()
+
+        subset = {k:v for k,v in schema.iteritems() if not k == '__global' and v['type'] == 'text'}
+        searches = []
+        for k,v in subset.iteritems():
+            ip = TextInput(
+                name=k,
+                title=k,
+                value=''
+            )
+            ip._owner = k
+            ip.on_change('value', search_change)
+            searches.append(ip)
+
+        return VBox(children=selects+searches)
         
     def _resolve_glyph(self):
         factory = None
@@ -160,9 +175,9 @@ class Bokeshif:
                     title=None,
                     plot_width=675,
                     plot_height=100,
-                    min_border=0,
+                    min_border=5,
                     min_border_left=50,
-                    min_border_bottom=50,
+                    min_border_bottom=25,
                     min_border_right=1)        
 
         color = self.colors[idx]
