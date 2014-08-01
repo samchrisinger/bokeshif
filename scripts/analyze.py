@@ -34,5 +34,5 @@ def stats():
     res = es.search(query, index=index)
     for item in res['hits']['hits']:
         cells.append(item['_source']['took'])
-    plot_hist(cells, height=25.0, xlab=True, colour='red', binwidth=0.005, title="Summary of recent queries")
+    plot_hist(cells, height=25.0, regular=True, pch='.', xlab=True, colour='red', binwidth=0.005, bincount=10, title="Summary of recent queries")
     

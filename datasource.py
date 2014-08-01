@@ -1,6 +1,6 @@
 from pyelasticsearch import ElasticSearch
 from requests import get as rget
-from datetime import datetime
+from datetime import datetime, timedelta
 from pandas import DataFrame
 from json import dumps
 import time
@@ -23,10 +23,10 @@ class ElasticQuery:
     def _ands(self, ands):
         return {"and": ands}
 
-    def _rangequery(self, field, args):
+    def _rangequery(self, field, args):        
         bounds = {
-            'from': self.min_time.strftime('%Y-%m-%d'),
-            'to': self.max_time.strftime('%Y-%m-%d')
+            'from': (self.min_time-timedelta(days=1)).strftime('%Y-%m-%d'),
+            'to': (self.max_time+timedelta(days=1)).strftime('%Y-%m-%d')
         }
         bounds.update(args)
         timerange = {}
