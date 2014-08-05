@@ -22,7 +22,7 @@ session.load_document(document)
 
 data = {
     'l': range(0,1000),
-    'r': range(1,1001),
+    'r': [i+0.1 for i in range(0,1000)],
     'b': [0]*1000,
     'y': [randint(0,1000) for i in range(1000)]
 }
@@ -45,8 +45,8 @@ def _plot():
                 x_range=xdr, 
                 y_range=ydr, 
                 title=None,
-                plot_width=1200,
-                plot_height=800)
+                plot_width=800,
+                plot_height=500)
 
     quad = Quad(left='l',
                 right='r',
@@ -73,7 +73,7 @@ def _plot():
                  axis=yaxis)    
     hover = HoverTool(plot=plot, 
                       tooltips=OrderedDict([
-                          ("l", "@l")
+                          ("", "@l")
                       ]),
                       always_active=True)    
     plot.tools.append(hover)

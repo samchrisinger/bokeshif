@@ -192,7 +192,7 @@ class Bokeshif:
                           bottom=0,
                           top='max',
                           line_color=color,
-                          line_alpha='{0}_density'.format(column))                
+                          line_alpha='{0}_density'.format(column))             
         bg_renderer = Glyph(data_source=self.timeline_source, 
                             xdata_range=xdr, 
                             ydata_range=ydr, 
@@ -206,19 +206,19 @@ class Bokeshif:
                              location='bottom',
                              dimension=0,
                              formatter=formatter)
-        xgrid = Grid(plot=plot,
-                     dimension=0,
-                     axis=xaxis)
+        Grid(plot=plot,
+             dimension=0,
+             axis=xaxis)
         yaxis = LinearAxis(plot=plot, 
                            location='left',
                            dimension=1,
                            major_label_text_font_size="6pt")
-        ygrid = Grid(plot=plot,
-                     dimension=1,
-                     axis=yaxis)
+        Grid(plot=plot,
+             dimension=1,
+             axis=yaxis)
         hover = HoverTool(plot=plot, 
                           tooltips=OrderedDict([
-                              ("left", "@left")
+                              ("Date", "@date")
                           ]),
                           always_active=True)
         plot.tools.append(hover)
