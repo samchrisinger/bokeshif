@@ -1,45 +1,30 @@
-from time import sleep
 from flask import render_template
-import threading
-import signal
+from bokeh.plotting import cursession
+from bokeh.resources import Resources
 
 from flask import Flask
 app = Flask(__name__)
 app.debug = True
 
-from bokeshif import Bokeshif
+from bokeshif import BokeshifApp
 
-class Killable(threading.Thread):    
-    def __init__(self, **kwargs):
-        super(Killable, self).__init__(**kwargs)
-        self._stop = threading.Event()
-        
-    def stop(self):
-        self._stop.set()
-        
-threads = []
-def cleanup_threads(*args):    
-    i = 0
-    for thread in threads:        
-        thread.stop()
-        thread.join()
-        i = i+1
-    return 'Cleaned up {0} threads'.format(i)
-
-def serve_app(bk):
-    while True:
-        bk.reload()
-        sleep(0.2)
-
-signal.signal(signal.SIGTERM, cleanup_threads)
+def make_plot(session):
+    bokeshif = BokeshifApp(session=session)
+    return bokeshif
 
 @app.route('/')
 def index():
-    bokeshif = Bokeshif()
-    thread = Killable(target=serve_app, args=[bokeshif])
-    thread.start()
-    threads.append(thread)
-    return render_template('plot.html', autoload_script=bokeshif.embed_tag)
+    sess = cursession()
+    bokehshif = make_plot(sess)
+    docname = bokehshif.name
+    resources = Resources(mode='inline')
+    return render_template('plot.html', 
+                           docname=docname,
+                           resources=resources,
+                           bokeh_location='localhost:5006/')
 
 if __name__ == '__main__':
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    app.debug = True
     app.run()

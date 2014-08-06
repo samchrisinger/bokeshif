@@ -1,5 +1,33 @@
 <html>
+  <head>
+    <style>
+      {% for style in resources['css_raw'] %}
+         {{ style | safe }}
+      {% endfor %}
+    </style>
+    <script>
+      {% for script in resources['js_raw'] %}
+         {{ script | safe }}
+      {% endfor %}
+    </script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+      $(function(){
+      window.Backbone = Bokeh.Backbone;
+      window._ = Bokeh._;
+      Bokeh.Config.prefix = "http://{{ bokeh_location }}";
+      Bokeh.Config.ws_conn_string = "ws://{{ bokeh_location }}/bokeh/sub";
+      bokehapp.main();      
+      Bokeh.server_page("{{ docname }}", false);
+      })
+    </script>
+  </head>
   <body>
-    {{ autoload_script|safe }}
+    <div class="container-fluid">
+      <div id="query">
+      </div>
+      <div id="vis">
+      </div>
+    </div>
   </body>
 </html>
