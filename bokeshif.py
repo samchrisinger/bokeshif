@@ -25,17 +25,6 @@ class Bokeshif:
         self.vis = {
             'counter': PreText(text=''),
             'layout': None,
-            'timelines': {
-                'container': None,
-            },
-            'documents': {
-                'width': 300,
-                'height': 150,
-                'container_glyph': None,
-                'title_glyph': None,
-                'body_glyph': None,
-                'container_id': None
-            }
         }
         self.query = {}
         self.count = 0
@@ -259,7 +248,6 @@ class Bokeshif:
 
         info = self._timelines_info()
         container = VBox(children=[info]+timelines)
-        self.vis['timelines']['container'] = container
         return container
 
     def _rebuild_timelines(self):
